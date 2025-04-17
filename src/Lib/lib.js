@@ -38,7 +38,7 @@ _.successToast = (msg = "success msg missing") => {
   });
 };
 
-_.errorToast = (msg = "error msg missing") => {
+_.errorToast = (msg = "error msg missingggg") => {
   toast.error(msg, {
     position: "top-center",
     autoClose: 2000,

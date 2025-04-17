@@ -1,12 +1,15 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FaRegBell } from "react-icons/fa";
 import { FaGear } from "react-icons/fa6";
 import { IoCloudUploadOutline, IoHomeOutline } from "react-icons/io5";
 import { TbLogout2 } from "react-icons/tb";
 import { TiMessage } from "react-icons/ti";
 import { Link, useLocation, useParams } from "react-router";
+import { getDatabase, ref, onValue } from "firebase/database";
 
 const Sidebar = () => {
+  const db = getDatabase();
+  const [userData, setUserData] = useState([]);
   const navigationIcons = [
     {
       id: 1,
@@ -37,6 +40,67 @@ const Sidebar = () => {
   const location = useLocation();
 
   // catch the url params
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://upload-widget.cloudinary.com/latest/global/all.js";
+    script.async = true;
+    document.body.appendChild(script);
+    console.log(script);
+  }, []);
+  /**
+   * ! read and write data in firebase
+   * todo fetch the data to the firebase
+   */
+  useEffect(() => {
+    const fetchData = () => {
+      const UserRef = ref(db, "users/");
+      onValue(UserRef, (snapshot) => {
+        let userArr = [];
+        snapshot.forEach((item) => {
+          userArr.push({ ...item.val(), userKey: item.key });
+        });
+        setUserData(userArr);
+      });
+    };
+    fetchData();
+  }, []);
+  console.log(userData);
+  /**
+   * todo handleProfilePic function
+   */
+  const handleProfilePic = () => {
+    if (window.cloudinary) {
+      cloudinary.openUploadWidget(
+        {
+          cloudName: "dazbaelpk",
+          uploadPreset: "chatAppClass",
+          googleApiKey: "AIzaSyBj7HACYr7i1dWgC81FalKEwMuPXarS3rk",
+          searchBySites: ["all", "cloudinary.com"],
+          searchByRights: true,
+          sources: [
+            "local",
+            "url",
+            "camera",
+            "image_search",
+            "dropbox",
+            "image_search",
+            "shutterstock",
+            "unsplash",
+          ],
+        },
+        (error, result) => {
+          if (error) {
+            throw new Error("cloudinary profile picture upload error");
+          }
+          if (result.info.secure_url) {
+            console.log(result.info.secure_url);
+          }
+        }
+      );
+    } else {
+      throw new Error("upload failed");
+    }
+  };
 
   return (
     <div>
@@ -51,7 +115,10 @@ const Sidebar = () => {
                 className="w-full h-full object-cover rounded-full"
               />
             </picture>
-            <span className="absolute hidden group-hover:block top-1/2 left-1/3 -translate-y-1/2 text-white text-2xl">
+            <span
+              onClick={handleProfilePic}
+              className="absolute hidden group-hover:block top-1/2 left-1/3 -translate-y-1/2 text-white text-2xl"
+            >
               <IoCloudUploadOutline />
             </span>
           </div>

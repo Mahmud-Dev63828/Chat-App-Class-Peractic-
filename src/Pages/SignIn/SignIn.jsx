@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { getDatabase, ref, set } from "firebase/database";
+import { getDatabase, ref, set, push } from "firebase/database";
 import { FcGoogle } from "react-icons/fc";
 import {
   getAuth,
@@ -8,11 +8,12 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 const SignIn = () => {
   const auth = getAuth();
-  const database = getDatabase();
+  const db = getDatabase();
+  const navigate = useNavigate();
 
   const [logInInfo, setLogInInfo] = useState({
     email: "",
@@ -38,6 +39,7 @@ const SignIn = () => {
     signInWithEmailAndPassword(auth, email, password)
       .then((info) => {
         console.log(info);
+        navigate("/");
       })
       .catch((err) => {
         console.log(err);
@@ -48,12 +50,20 @@ const SignIn = () => {
     const provider = new GoogleAuthProvider();
     signInWithPopup(auth, provider)
       .then((userInfo) => {
-        set(ref(database, "users/"), {
-          username: "Mahmud",
-          email: "mahmud@1234",
-          profile_picture: "imageUrl",
+        const { user } = userInfo;
+
+        const userdb = ref(db, "users/");
+        set(push(userdb), {
+          userid: user.uid,
+          username: user.displayName || "name missing",
+          email: user.email || "email missing",
+          profile_picture:
+            user.photoURL ||
+            `https://images.pexels.com/photos/6940512/pexels-photo-6940512.jpeg?auto=compress&cs=tinysrgb&w=600`,
         });
-        console.log(userInfo);
+      })
+      .then(() => {
+        navigate("/");
       })
       .catch((err) => {
         console.log(err);

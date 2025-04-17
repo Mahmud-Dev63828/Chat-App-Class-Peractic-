@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router";
 import SignIn from "./Pages/SignIn/SignIn";
 import Home from "./Pages/Home/Index";
 import RootLayout from "./Components/RootLayout/RootLayout";
+import ChatPage from "./Pages/ChatPage/ChatPage";
 
 const App = () => {
   return (
@@ -11,7 +12,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<RootLayout />}>
           <Route index element={<Home />} />
-          <Route path="/message" element={"This is message"} />
+          <Route path="/message" element={<ChatPage />} />
           <Route path="/notification" element={"This is notification"} />
           <Route path="/setting" element={"This is setting"} />
         </Route>

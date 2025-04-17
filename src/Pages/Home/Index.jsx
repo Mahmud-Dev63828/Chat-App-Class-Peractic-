@@ -9,22 +9,22 @@ import BlockUser from "../../Components/HomePageComponents/BlockUser";
 const Index = () => {
   return (
     <div className="flex gap-5 justify-between flex-wrap">
-      <div className="w-[400px]   px-2 ">
+      <div className="w-[30vw]   px-2 ">
         <GroupList />
       </div>
-      <div className="w-[350px]   px-2 pt-2 ">
+      <div className="w-[25vw]   px-2 pt-2 ">
         <Friends />
       </div>
-      <div className="w-[350px]   px-2 pt-2 ">
+      <div className="w-[25vw]   px-2 pt-2 ">
         <UserList />
       </div>
-      <div className="w-[350px]   px-2 pt-2 ">
+      <div className="w-[30vw]   px-2 pt-2 ">
         <FriendRequest />
       </div>
-      <div className="w-[350px]   px-2 pt-2 ">
+      <div className="w-[25vw]   px-2 pt-2 ">
         <Group />
       </div>
-      <div className="w-[350px]   px-2 pt-2 ">
+      <div className="w-[25vw]   px-2 pt-2 ">
         <BlockUser />
       </div>
     </div>

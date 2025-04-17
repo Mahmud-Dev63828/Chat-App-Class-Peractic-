@@ -10,8 +10,9 @@ import {
 import { BeatLoader } from "react-spinners";
 import { toast, Bounce, Flip } from "react-toastify";
 import { Link } from "react-router";
-
+import { getDatabase, push, ref, set } from "firebase/database";
 const SignUp = () => {
+  const db = getDatabase();
   const auth = getAuth();
   const { successToast, infoToast, errorToast } = libery;
   const [email, setEmail] = useState("");
@@ -26,52 +27,7 @@ const SignUp = () => {
   const [eye, setEye] = useState(false);
   // loading
   const [loading, setLoading] = useState(false);
-  /*
-   todo : handleChange fnctio apply
-   * @params : {event}
-   *return : null
-  */
-  // const handleChange = (event) => {
-  //   const { name, value } = event.target;
-  //   if (name == "fullName") {
-  //     setFullName(value);
-  //   } else if (name == "email") {
-  //     setEmail(value);
-  //   } else {
-  //     setPassword(value);
-  //   }
-  //   console.log(fullName, email, password);
-  // };
-  /**
-   * todo : handleSignUp function implement
-   * @params : {}
-   * return : null
-   */
-  // const handleSignUp = () => {
-  //   if (!email) {
-  //     setEmailError("email missing");
-  //   } else if (!fullName) {
-  //     setFullNameError("fullName missing");
-  //   } else if (!password) {
-  //     setPasswordError("password missing");
-  //   } else {
-  //     alert("Succesfully Sign Uped");
-  //   }
-  // };
-  // const handleSignUp = () => {
-  //   if (!email) {
-  //     setEmailError("Email missing");
-  //   }
-  //   if (!fullName) {
-  //     setFullNameError("Full Name missing");
-  //   }
-  //   if (!password) {
-  //     setPasswordError("Password missing");
-  //   }
-  //   if (email && fullName && password) {
-  //     alert("Successfully Signed Up");
-  //   }
-  // };
+
   // ! handle signup function apply
   const handleSignUp = () => {
     if (!email) {
@@ -88,32 +44,37 @@ const SignUp = () => {
       setEmailError("");
       setPasswordError("");
       createUserWithEmailAndPassword(auth, email, password)
-        .then((userInfo) => {
-          // successfully registerd
-          successToast(`${fullName} your registered succesfull`);
+        .then((userinfo) => {
+          successToast("registarion sucessfull ");
           updateProfile(auth.currentUser, {
             displayName: fullName,
+            photoURL:
+              "https://images.pexels.com/photos/6940512/pexels-photo-6940512.jpeg?auto=compress&cs=tinysrgb&w=600",
           });
         })
         .then(() => {
-          // send mail for verification
+          const userdb = ref(db, "users/");
+          set(push(userdb), {
+            userid: auth.currentUser.uid,
+            username: auth.currentUser.displayName || fullName,
+            email: auth.currentUser.email || email,
+            profile_picture:
+              auth.currentUser.photoURL ||
+              `https://images.pexels.com/photos/6940512/pexels-photo-6940512.jpeg?auto=compress&cs=tinysrgb&w=600`,
+          });
+          // send email for autheicate user;
           return sendEmailVerification(auth.currentUser);
         })
         .then((mailData) => {
-          // mail send info
-
-          infoToast("verification mail submited. please chk your email");
+          infoToast("🦄mail send sucessfulll Check your email");
         })
         .catch((err) => {
-          // error
-
           errorToast(err.code);
-          console.log(err.code);
         })
         .finally(() => {
           setLoading(false);
-          setEmail("");
           setFullName("");
+          setEmail("");
           setPassword("");
         });
     }
