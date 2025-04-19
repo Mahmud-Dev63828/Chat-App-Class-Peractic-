@@ -54,11 +54,11 @@ const SignIn = () => {
 
         const userdb = ref(db, "users/");
         set(push(userdb), {
-          userid: user.uid,
-          username: user.displayName || "name missing",
-          email: user.email || "email missing",
+          userid: user?.uid,
+          username: user?.displayName || "name missing",
+          email: user?.email || "email missing",
           profile_picture:
-            user.photoURL ||
+            user?.photoURL ||
             `https://images.pexels.com/photos/6940512/pexels-photo-6940512.jpeg?auto=compress&cs=tinysrgb&w=600`,
         });
       })

@@ -5,11 +5,13 @@ import { IoCloudUploadOutline, IoHomeOutline } from "react-icons/io5";
 import { TbLogout2 } from "react-icons/tb";
 import { TiMessage } from "react-icons/ti";
 import { Link, useLocation, useParams } from "react-router";
-import { getDatabase, ref, onValue } from "firebase/database";
+import { getDatabase, ref, onValue, push, update } from "firebase/database";
+import { getAuth } from "firebase/auth";
 
 const Sidebar = () => {
   const db = getDatabase();
-  const [userData, setUserData] = useState([]);
+  const auth = getAuth();
+  const [userData, setUserData] = useState({});
   const navigationIcons = [
     {
       id: 1,
@@ -55,11 +57,12 @@ const Sidebar = () => {
     const fetchData = () => {
       const UserRef = ref(db, "users/");
       onValue(UserRef, (snapshot) => {
-        let userArr = [];
+        let obj = {};
         snapshot.forEach((item) => {
-          userArr.push({ ...item.val(), userKey: item.key });
+          if (auth.currentUser.uid === item.val().userid)
+            obj = { ...item.val(), userKey: item.key };
         });
-        setUserData(userArr);
+        setUserData(obj);
       });
     };
     fetchData();
@@ -93,7 +96,10 @@ const Sidebar = () => {
             throw new Error("cloudinary profile picture upload error");
           }
           if (result.info.secure_url) {
-            console.log(result.info.secure_url);
+            // for update profile picture on database
+            update(ref(db, `users/${userData.userKey}`), {
+              profile_picture: result.info.secure_url,
+            });
           }
         }
       );
@@ -101,6 +107,9 @@ const Sidebar = () => {
       throw new Error("upload failed");
     }
   };
+
+  console.log("userdata =", userData);
+  // console.log("userdata =", auth.currentUser);
 
   return (
     <div>
@@ -110,7 +119,10 @@ const Sidebar = () => {
           <div className="w-[70px] mt-10 h-[70px] rounded-full relative cursor-pointer group">
             <picture>
               <img
-                src="https://plus.unsplash.com/premium_photo-1690407617542-2f210cf20d7e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjV8fGF2YXRhcnxlbnwwfHwwfHx8MA%3D%3D"
+                src={
+                  userData?.profile_picture ||
+                  "https://plus.unsplash.com/premium_photo-1690407617542-2f210cf20d7e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjV8fGF2YXRhcnxlbnwwfHwwfHx8MA%3D%3D"
+                }
                 alt="profilePic"
                 className="w-full h-full object-cover rounded-full"
               />
@@ -123,6 +135,9 @@ const Sidebar = () => {
             </span>
           </div>
         </div>
+        <h1 className="text-white text-xl mt-3 flex justify-center items-center">
+          {userData?.username}
+        </h1>
         {/* navigation icon */}
         <div className="flex flex-col gap-y-8 items-center justify-center mt-10">
           {navigationIcons?.map((item, index) =>
