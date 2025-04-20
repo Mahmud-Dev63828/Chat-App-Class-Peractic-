@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { HiDotsVertical } from "react-icons/hi";
 import Avatar from "../../assets/homeAssets/avatar.gif";
-import { FaPlus } from "react-icons/fa";
-import { getDatabase, ref, onValue, off } from "firebase/database";
+import { FaMinus, FaPlus } from "react-icons/fa";
+import { getDatabase, ref, onValue, off, set, push } from "firebase/database";
 import { getAuth } from "firebase/auth";
 import { UserListSkeleton } from "../../Skeleton/UserListSkeleton";
+import lib from "../../Lib/lib";
 
 const UserList = () => {
   const db = getDatabase();
   const auth = getAuth();
   const [userList, setUserList] = useState([]);
+  const [currentUser, setCurrentUser] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,6 +22,8 @@ const UserList = () => {
       snapshot.forEach((user) => {
         if (auth.currentUser?.uid !== user.val().userid) {
           userBlankArr.push({ ...user.val(), userKey: user.key });
+        } else {
+          setCurrentUser({ ...user.val(), userKey: user.key });
         }
       });
       setUserList(userBlankArr);
@@ -36,6 +40,50 @@ const UserList = () => {
     return <UserListSkeleton />;
   }
 
+  // todo handleFriendRequest for send friend request
+  const handleFriendRequest = (user) => {
+    set(push(ref(db, "friendRequest/")), {
+      whoSendFrndReqName:
+        currentUser?.username || auth?.currentUser?.displayName,
+      whoSendFrndReqUid: currentUser?.userid || auth?.currentUser?.uid,
+      whoSendFrndReqEmail: currentUser?.email || auth?.currentUser?.email,
+      whoSendFrndReqProfile_Picture:
+        currentUser?.profile_picture || auth?.currentUser?.photoURL,
+      whoSendFrndReqUserKey: currentUser?.userKey || "",
+      whoRecivedFrndReqName: user?.username || "",
+      whoRecivedFrndReqUid: user?.userid || "",
+      whoRecivedFrndReqUserKey: user?.userKey || "",
+      whoRecivedFrndReqProfile_Picture: user?.profile_picture || "",
+      whoRecivedFrndReqEmail: user?.email || "",
+      createdAt: lib.getTimeNow(),
+    })
+      .then(() => {
+        set(push(ref(db, "notification/")), {
+          notificationMsg: `${
+            currentUser?.username || auth?.currentUser?.displayName
+          } send you a friend Request`,
+
+          createdAt: lib.getTimeNow(),
+        });
+      })
+      .then(() => {
+        lib.successToast(
+          `${
+            currentUser?.username || auth?.currentUser?.displayName
+          } send you a friend Request`
+        );
+      })
+      .then(() => {
+        const senderIdReciverId = {
+          id: currentUser?.userid + user?.userid,
+        };
+        localStorage.setItem("sendFrndReq", JSON.stringify(senderIdReciverId));
+      });
+  };
+
+  // todo   get data from local storage
+  const frndReqData = localStorage.getItem("sendFrndReq");
+  const senderReciverId = JSON.parse(frndReqData);
   return (
     <div className="shadow-2xs mt-3">
       <div className="flex items-center justify-between">
@@ -76,8 +124,26 @@ const UserList = () => {
               </p>
             </div>
 
+            {currentUser?.userid + user?.userid == senderReciverId?.id ? (
+              <button
+                type="button"
+                className="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 cursor-pointer"
+              >
+                <FaMinus />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => handleFriendRequest(user)}
+                className="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 cursor-pointer"
+              >
+                <FaPlus />
+              </button>
+            )}
+
             <button
               type="button"
+              onClick={() => handleFriendRequest(user)}
               className="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 cursor-pointer"
             >
               <FaPlus />

@@ -47,7 +47,6 @@ const Sidebar = () => {
     script.src = "https://upload-widget.cloudinary.com/latest/global/all.js";
     script.async = true;
     document.body.appendChild(script);
-    console.log(script);
   }, []);
   /**
    * ! read and write data in firebase
@@ -67,7 +66,6 @@ const Sidebar = () => {
     };
     fetchData();
   }, []);
-  console.log(userData);
   /**
    * todo handleProfilePic function
    */
@@ -107,9 +105,6 @@ const Sidebar = () => {
       throw new Error("upload failed");
     }
   };
-
-  console.log("userdata =", userData);
-  // console.log("userdata =", auth.currentUser);
 
   return (
     <div>

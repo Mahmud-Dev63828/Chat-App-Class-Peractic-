@@ -1,3 +1,4 @@
+import moment from "moment";
 import { toast, Flip } from "react-toastify";
 
 const _ = {};
@@ -64,6 +65,10 @@ _.infoToast = (msg = "info msg missing") => {
     theme: "colored",
     transition: Flip,
   });
+};
+// date and time
+_.getTimeNow = () => {
+  return moment().format("DD MM YYYY hh:mm:ss");
 };
 
 export default _;

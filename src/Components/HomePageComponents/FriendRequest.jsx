@@ -1,10 +1,43 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import Avatar from "../../assets/homeAssets/avatar.gif";
-import { FaPlug, FaPlus } from "react-icons/fa";
+import { getDatabase, ref, onValue, off, set, push } from "firebase/database";
+import { getAuth } from "firebase/auth";
+import { UserListSkeleton } from "../../Skeleton/UserListSkeleton";
 
 const FriendRequest = () => {
+  const db = getDatabase();
+  const auth = getAuth();
   const [arrayLength, setArrayLength] = useState(10);
+  const [frnReqList, setFrnReqList] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const userRef = ref(db, "friendRequest");
+
+    onValue(userRef, (snapshot) => {
+      const frndReqBlankArr = [];
+      snapshot.forEach((eachFrndReq) => {
+        frndReqBlankArr.push({
+          ...eachFrndReq.val(),
+          frndReqKey: eachFrndReq.key,
+        });
+      });
+      setFrnReqList(frndReqBlankArr);
+      setLoading(false);
+    });
+
+    console.log(frnReqList);
+    // Cleanup
+    return () => {
+      off(userRef);
+    };
+  }, []);
+
+  if (loading) {
+    return <UserListSkeleton />;
+  }
+
   return (
     <div>
       {/* list part */}
