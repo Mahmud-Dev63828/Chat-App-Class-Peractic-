@@ -68,7 +68,7 @@ _.infoToast = (msg = "info msg missing") => {
 };
 // date and time
 _.getTimeNow = () => {
-  return moment().format("DD MM YYYY hh:mm:ss");
+  return moment().format("MM DD YYYY, h:mm:ss a");
 };
 
 export default _;

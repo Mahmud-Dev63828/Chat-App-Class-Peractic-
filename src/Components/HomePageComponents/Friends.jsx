@@ -1,9 +1,39 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import Avatar from "../../assets/homeAssets/avatar.gif";
+import { getAuth } from "firebase/auth";
+import moment from "moment";
+import { getDatabase, ref, onValue, off, set, push } from "firebase/database";
 
 const Friends = () => {
+  const db = getDatabase();
+  const auth = getAuth();
+  const [frndList, setFrndList] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const [arrayLength, setArrayLength] = useState(10);
+
+  // data fetch from friends database
+
+  useEffect(() => {
+    const userRef = ref(db, "friends");
+
+    onValue(userRef, (snapshot) => {
+      const frndBlankArr = [];
+      snapshot.forEach((frnd) => {
+        frndBlankArr.push({ ...frnd?.val(), frndKey: frnd?.key });
+      });
+      setFrndList(frndBlankArr);
+      setLoading(false);
+    });
+
+    // Cleanup
+    return () => {
+      off(userRef);
+    };
+  }, []);
+  console.log(frndList);
+
   return (
     <div>
       {/* list part */}
@@ -12,7 +42,7 @@ const Friends = () => {
           <h1 className="relative">
             Friends
             <span className="absolute -right-6  top-0 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
-              {arrayLength}
+              {frndList.length}
             </span>
           </h1>
           <span>
@@ -20,10 +50,10 @@ const Friends = () => {
           </span>
         </div>
         <div className="overflow-y-scroll h-[40dvh]">
-          {[...new Array(arrayLength)].map((_, index) => (
+          {frndList.map((frnd, index) => (
             <div
               className={
-                arrayLength - 1 == index
+                frnd - 1 == index
                   ? "flex items-center justify-between mt-2 "
                   : "flex items-center justify-between mt-2 border-b border-b-gray-500 pb-2"
               }
@@ -32,16 +62,18 @@ const Friends = () => {
                 <picture>
                   <img
                     className="w-full h-full object-cover rounded-full"
-                    src={Avatar}
+                    src={frnd?.whoSendFrndReqProfile_Picture}
                     alt={Avatar}
                   />
                 </picture>
               </div>
               <div>
-                <h1 className="font-medium text-[20px]">Friends Reunion</h1>
+                <h1 className="font-medium text-[20px]">
+                  {frnd?.whoSendFrndReqName}
+                </h1>
                 <p className="text-sm ">Hi Friends, What's up</p>
               </div>
-              <p>Today, 8pm</p>
+              <p>{moment(frnd?.createdAt).fromNow()}</p>
             </div>
           ))}
         </div>

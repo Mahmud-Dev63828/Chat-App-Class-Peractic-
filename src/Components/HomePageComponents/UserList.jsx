@@ -13,7 +13,8 @@ const UserList = () => {
   const [userList, setUserList] = useState([]);
   const [currentUser, setCurrentUser] = useState({});
   const [loading, setLoading] = useState(true);
-
+  const [frndReqList, setFrndReqList] = useState([]);
+  // todo fetch data from users
   useEffect(() => {
     const userRef = ref(db, "users");
 
@@ -36,10 +37,30 @@ const UserList = () => {
     };
   }, []);
 
+  // todo fetch data from friendRequest
+  useEffect(() => {
+    const frndReqRef = ref(db, "friendRequest");
+
+    onValue(frndReqRef, (snapshot) => {
+      const frndReqBlankArr = [];
+      snapshot.forEach((frndReq) => {
+        if (auth?.currentUser?.uid == frndReq.val()?.whoSendFrndReqUid)
+          frndReqBlankArr.push(
+            auth?.currentUser?.uid.concat(frndReq.val()?.whoRecivedFrndReqUid)
+          );
+        setFrndReqList(frndReqBlankArr);
+      });
+    });
+
+    // Cleanup
+    return () => {
+      off(frndReqRef);
+    };
+  }, []);
   if (loading) {
     return <UserListSkeleton />;
   }
-
+  console.log(frndReqList);
   // todo handleFriendRequest for send friend request
   const handleFriendRequest = (user) => {
     set(push(ref(db, "friendRequest/")), {
@@ -73,17 +94,11 @@ const UserList = () => {
           } send you a friend Request`
         );
       })
-      .then(() => {
-        const senderIdReciverId = {
-          id: currentUser?.userid + user?.userid,
-        };
-        localStorage.setItem("sendFrndReq", JSON.stringify(senderIdReciverId));
+      .catch((err) => {
+        console.error("error form handleFrndReq", err);
       });
   };
 
-  // todo   get data from local storage
-  const frndReqData = localStorage.getItem("sendFrndReq");
-  const senderReciverId = JSON.parse(frndReqData);
   return (
     <div className="shadow-2xs mt-3">
       <div className="flex items-center justify-between">
@@ -124,7 +139,7 @@ const UserList = () => {
               </p>
             </div>
 
-            {currentUser?.userid + user?.userid == senderReciverId?.id ? (
+            {frndReqList?.includes(auth?.currentUser?.uid + user?.userid) ? (
               <button
                 type="button"
                 className="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 cursor-pointer"
@@ -140,14 +155,6 @@ const UserList = () => {
                 <FaPlus />
               </button>
             )}
-
-            <button
-              type="button"
-              onClick={() => handleFriendRequest(user)}
-              className="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 cursor-pointer"
-            >
-              <FaPlus />
-            </button>
           </div>
         ))}
       </div>
