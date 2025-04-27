@@ -1,11 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import Avatar from "../../assets/homeAssets/avatar.gif";
-import { getDatabase, ref, onValue, off, set, push } from "firebase/database";
+import {
+  getDatabase,
+  ref,
+  onValue,
+  off,
+  set,
+  push,
+  remove,
+} from "firebase/database";
 import { getAuth } from "firebase/auth";
 import { UserListSkeleton } from "../../Skeleton/UserListSkeleton";
 import lib from "../../Lib/lib";
 import moment from "moment";
+import Alert from "../CommonComponent/Alert";
 
 const FriendRequest = () => {
   const db = getDatabase();
@@ -30,7 +39,6 @@ const FriendRequest = () => {
       setLoading(false);
     });
 
-    console.log(frnReqList);
     // Cleanup
     return () => {
       off(userRef);
@@ -48,6 +56,11 @@ const FriendRequest = () => {
       createdAt: lib.getTimeNow(),
     })
       .then(() => {
+        // remove the frnd request id (for remove from friend request)
+        const frndReqRef = ref(db, `friendRequest/${frndReqInfo.frndReqKey}`);
+        remove(frndReqRef);
+      })
+      .then(() => {
         set(push(ref(db, "notification/")), {
           notificationMsg: `${frndReqInfo?.whoRecivedFrndReqName} Accept your friend Request`,
           createdAt: lib.getTimeNow(),
@@ -63,6 +76,16 @@ const FriendRequest = () => {
       });
   };
 
+  // todo handleReject function for reject friend request
+  const handleReject = (frndReqInfoo) => {
+    let areYouSure = confirm("are you sure");
+    if (areYouSure) {
+      // remove the frnd request id (for remove from friend request by reject button)
+      const frndReqRef = ref(db, `friendRequest/${frndReqInfoo.frndReqKey}`);
+      remove(frndReqRef);
+    }
+  };
+
   return (
     <div>
       {/* list part */}
@@ -71,7 +94,7 @@ const FriendRequest = () => {
           <h1 className="relative">
             Friend Request
             <span className="absolute -right-6  top-0 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
-              {arrayLength}
+              {frnReqList.length}
             </span>
           </h1>
           <span>
@@ -79,40 +102,49 @@ const FriendRequest = () => {
           </span>
         </div>
         <div className="overflow-y-scroll h-[40dvh]">
-          {frnReqList?.map((frnd, index) => (
-            <div
-              className={
-                arrayLength - 1 == index
-                  ? "flex items-center justify-between mt-2 "
-                  : "flex items-center justify-between mt-2 border-b border-b-gray-500 pb-2"
-              }
-            >
-              <div className="w-[50px] h-[50px] rounded-full">
-                <picture>
-                  <img
-                    className="w-full h-full object-cover rounded-full"
-                    src={frnd?.whoSendFrndReqProfile_Picture || Avatar}
-                    alt={Avatar}
-                  />
-                </picture>
-              </div>
-              <div>
-                <h1 className="font-medium text-[20px]">
-                  {frnd?.whoSendFrndReqName}
-                </h1>
-                <p className="text-sm ">{moment(frnd?.createdAt).fromNow()}</p>
-              </div>
-              <button
-                onClick={() => handleAccFrndReq(frnd)}
-                className="bg-blue-800 px-3 rounded py-2 text-white"
+          {frnReqList?.length > 0 ? (
+            frnReqList?.map((frnd, index) => (
+              <div
+                className={
+                  frnd - 1 == index
+                    ? "flex items-center justify-between mt-2 "
+                    : "flex items-center justify-between mt-2 border-b border-b-gray-500 pb-2"
+                }
               >
-                Accept
-              </button>
-              <button className="bg-red-800 px-3 rounded py-2 text-white">
-                Reject
-              </button>
-            </div>
-          ))}
+                <div className="w-[50px] h-[50px] rounded-full">
+                  <picture>
+                    <img
+                      className="w-full h-full object-cover rounded-full"
+                      src={frnd?.whoSendFrndReqProfile_Picture || Avatar}
+                      alt={Avatar}
+                    />
+                  </picture>
+                </div>
+                <div>
+                  <h1 className="font-medium text-[20px]">
+                    {frnd?.whoSendFrndReqName}
+                  </h1>
+                  <p className="text-sm ">
+                    {moment(frnd?.createdAt).fromNow()}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleAccFrndReq(frnd)}
+                  className="bg-blue-800 px-3 rounded py-2 text-white"
+                >
+                  Accept
+                </button>
+                <button
+                  onClick={() => handleReject(frnd)}
+                  className="bg-red-800 px-3 rounded py-2 text-white"
+                >
+                  Reject
+                </button>
+              </div>
+            ))
+          ) : (
+            <Alert />
+          )}
         </div>
       </div>
     </div>

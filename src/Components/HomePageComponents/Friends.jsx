@@ -21,7 +21,8 @@ const Friends = () => {
     onValue(userRef, (snapshot) => {
       const frndBlankArr = [];
       snapshot.forEach((frnd) => {
-        frndBlankArr.push({ ...frnd?.val(), frndKey: frnd?.key });
+        if (auth?.currentUser?.uid == frnd?.val().whoRecivedFrndReqUid)
+          frndBlankArr.push({ ...frnd?.val(), frndKey: frnd?.key });
       });
       setFrndList(frndBlankArr);
       setLoading(false);
@@ -32,8 +33,8 @@ const Friends = () => {
       off(userRef);
     };
   }, []);
-  console.log(frndList);
 
+  console.log(frndList);
   return (
     <div>
       {/* list part */}
@@ -63,7 +64,7 @@ const Friends = () => {
                   <img
                     className="w-full h-full object-cover rounded-full"
                     src={frnd?.whoSendFrndReqProfile_Picture}
-                    alt={Avatar}
+                    alt={"hjljjl"}
                   />
                 </picture>
               </div>

@@ -14,6 +14,7 @@ const UserList = () => {
   const [currentUser, setCurrentUser] = useState({});
   const [loading, setLoading] = useState(true);
   const [frndReqList, setFrndReqList] = useState([]);
+  const [actualFrndList, setActualFrndList] = useState([]);
   // todo fetch data from users
   useEffect(() => {
     const userRef = ref(db, "users");
@@ -27,7 +28,7 @@ const UserList = () => {
           setCurrentUser({ ...user.val(), userKey: user.key });
         }
       });
-      setUserList(userBlankArr);
+      setActualFrndList(userBlankArr);
       setLoading(false);
     });
 
@@ -57,10 +58,35 @@ const UserList = () => {
       off(frndReqRef);
     };
   }, []);
+
+  // todo fetch data from friends
+  useEffect(() => {
+    const frndRef = ref(db, "friends");
+
+    onValue(frndRef, (snapshot) => {
+      const frndBlankArr = [];
+      snapshot.forEach((singleFrnd) => {
+        if (auth?.currentUser?.uid == singleFrnd.val()?.whoSendFrndReqUid) {
+          frndBlankArr.push(
+            auth?.currentUser?.uid.concat(
+              singleFrnd.val()?.whoRecivedFrndReqUid
+            )
+          );
+        }
+
+        setFrndReqList(frndBlankArr);
+      });
+    });
+
+    // Cleanup
+    return () => {
+      off(frndRef);
+    };
+  }, []);
+
   if (loading) {
     return <UserListSkeleton />;
   }
-  console.log(frndReqList);
   // todo handleFriendRequest for send friend request
   const handleFriendRequest = (user) => {
     set(push(ref(db, "friendRequest/")), {
@@ -138,6 +164,9 @@ const UserList = () => {
                 {user.email || "Missing"}
               </p>
             </div>
+            {actualFrndList?.includes(auth?.currentUser?.uid + user?.userid)
+              ? "frn"
+              : "not"}
 
             {frndReqList?.includes(auth?.currentUser?.uid + user?.userid) ? (
               <button
