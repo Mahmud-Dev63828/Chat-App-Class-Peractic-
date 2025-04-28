@@ -28,7 +28,7 @@ const UserList = () => {
           setCurrentUser({ ...user.val(), userKey: user.key });
         }
       });
-      setActualFrndList(userBlankArr);
+      setUserList(userBlankArr);
       setLoading(false);
     });
 
@@ -60,21 +60,40 @@ const UserList = () => {
   }, []);
 
   // todo fetch data from friends
+  // useEffect(() => {
+  //   const frndRef = ref(db, "friends");
+
+  //   onValue(frndRef, (snapshot) => {
+  //     const frndBlankArr = [];
+  //     snapshot.forEach((singleFrnd) => {
+  //       if (auth?.currentUser?.uid == singleFrnd.val()?.whoSendFrndReqUid) {
+  //         frndBlankArr.push(
+  //           singleFrnd
+  //             .val()
+  //             ?.whoRecivedFrndReqUid.concat(auth?.currentUser?.uid)
+  //         );
+  //       }
+
+  //       setFrndReqList(frndBlankArr);
+  //     });
+  //   });
+
+  //   // Cleanup
+  //   return () => {
+  //     off(frndRef);
+  //   };
+  // }, []);
   useEffect(() => {
     const frndRef = ref(db, "friends");
-
     onValue(frndRef, (snapshot) => {
-      const frndBlankArr = [];
+      const FrndBlankArr = [];
       snapshot.forEach((singleFrnd) => {
-        if (auth?.currentUser?.uid == singleFrnd.val()?.whoSendFrndReqUid) {
-          frndBlankArr.push(
-            auth?.currentUser?.uid.concat(
-              singleFrnd.val()?.whoRecivedFrndReqUid
-            )
+        if (auth.currentUser.uid == singleFrnd.val().whoSendFrndReqUid) {
+          FrndBlankArr.push(
+            auth?.currentUser?.uid.concat(singleFrnd.val().whoRecivedFrndReqUid)
           );
         }
-
-        setFrndReqList(frndBlankArr);
+        setActualFrndList(FrndBlankArr);
       });
     });
 
@@ -84,6 +103,7 @@ const UserList = () => {
     };
   }, []);
 
+  // todo loading
   if (loading) {
     return <UserListSkeleton />;
   }
@@ -164,9 +184,6 @@ const UserList = () => {
                 {user.email || "Missing"}
               </p>
             </div>
-            {actualFrndList?.includes(auth?.currentUser?.uid + user?.userid)
-              ? "frn"
-              : "not"}
 
             {frndReqList?.includes(auth?.currentUser?.uid + user?.userid) ? (
               <button
@@ -175,6 +192,10 @@ const UserList = () => {
               >
                 <FaMinus />
               </button>
+            ) : actualFrndList?.includes(
+                auth?.currentUser?.uid + user?.userid
+              ) ? (
+              "fr"
             ) : (
               <button
                 type="button"
