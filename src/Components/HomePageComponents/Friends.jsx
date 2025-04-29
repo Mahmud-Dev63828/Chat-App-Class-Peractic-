@@ -3,18 +3,50 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import Avatar from "../../assets/homeAssets/avatar.gif";
 import { getAuth } from "firebase/auth";
 import moment from "moment";
-import { getDatabase, ref, onValue, off, set, push } from "firebase/database";
+import lib from "../../Lib/lib";
+import {
+  getDatabase,
+  ref,
+  onValue,
+  off,
+  set,
+  push,
+  remove,
+} from "firebase/database";
 
 const Friends = () => {
   const db = getDatabase();
   const auth = getAuth();
   const [frndList, setFrndList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [active, setActive] = useState(false);
+  const [blockUser, setBlockUser] = useState([]);
 
   const [arrayLength, setArrayLength] = useState(10);
 
-  // data fetch from friends database
+  // todo fetch block data from block list
+  useEffect(() => {
+    const blockRef = ref(db, "blockLists/");
 
+    onValue(blockRef, (snapshot) => {
+      const blockBlankArr = [];
+      snapshot.forEach((block) => {
+        if (auth?.currentUser?.uid == block?.val().whoRecivedFrndReqUid)
+          blockBlankArr.push(
+            auth?.currentUser.uid.concat(block?.val().whoSendFrndReqUid)
+          );
+        console.log(block.val());
+      });
+      setBlockUser(blockBlankArr);
+    });
+
+    // Cleanup
+    return () => {
+      off(blockRef);
+    };
+  }, []);
+
+  //todo data fetch from friends database
   useEffect(() => {
     const userRef = ref(db, "friends");
 
@@ -34,7 +66,18 @@ const Friends = () => {
     };
   }, []);
 
-  console.log(frndList);
+  // todo handleBlock function apply
+  const handleBlock = (frndInfo) => {
+    set(push(ref(db, "blockLists/")), {
+      ...frndInfo,
+      createdAt: lib.getTimeNow(),
+    }).then(() => {
+      // todo delete from frnd list
+      const frndRef = ref(db, `friends/${frndInfo?.frndKey}`);
+      remove(frndRef);
+    });
+  };
+
   return (
     <div>
       {/* list part */}
@@ -74,7 +117,32 @@ const Friends = () => {
                 </h1>
                 <p className="text-sm ">Hi Friends, What's up</p>
               </div>
-              <p>{moment(frnd?.createdAt).fromNow()}</p>
+              <div className="flex">
+                <button
+                  type="button"
+                  class="focus:outline-none cursor-pointer text-white bg-green-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-2 py-1 me-2 mb-2"
+                >
+                  unfriend
+                </button>
+                {blockUser?.includes(
+                  auth?.currentUser?.uid.concat(frnd.whoSendFrndReqUid)
+                ) ? (
+                  <button
+                    type="button"
+                    class="focus:outline-none cursor-pointer text-white bg-purple-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-2 py-1 me-2 mb-2"
+                  >
+                    blocked
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleBlock(frnd)}
+                    type="button"
+                    class="focus:outline-none cursor-pointer text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-2 py-1 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900"
+                  >
+                    Block
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>

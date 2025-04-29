@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { HiDotsVertical } from "react-icons/hi";
 import Avatar from "../../assets/homeAssets/avatar.gif";
-import { FaMinus, FaPlus } from "react-icons/fa";
+import { FaMinus, FaPlus, FaUser } from "react-icons/fa";
 import { getDatabase, ref, onValue, off, set, push } from "firebase/database";
 import { getAuth } from "firebase/auth";
 import { UserListSkeleton } from "../../Skeleton/UserListSkeleton";
@@ -45,12 +45,13 @@ const UserList = () => {
     onValue(frndReqRef, (snapshot) => {
       const frndReqBlankArr = [];
       snapshot.forEach((frndReq) => {
-        if (auth?.currentUser?.uid == frndReq.val()?.whoSendFrndReqUid)
+        if (auth?.currentUser?.uid == frndReq.val()?.whoSendFrndReqUid) {
           frndReqBlankArr.push(
             auth?.currentUser?.uid.concat(frndReq.val()?.whoRecivedFrndReqUid)
           );
-        setFrndReqList(frndReqBlankArr);
+        }
       });
+      setFrndReqList(frndReqBlankArr);
     });
 
     // Cleanup
@@ -193,9 +194,14 @@ const UserList = () => {
                 <FaMinus />
               </button>
             ) : actualFrndList?.includes(
-                auth?.currentUser?.uid + user?.userid
+                auth?.currentUser?.uid.concat(user?.userid)
               ) ? (
-              "fr"
+              <button
+                type="button"
+                className="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 cursor-pointer"
+              >
+                <FaUser />
+              </button>
             ) : (
               <button
                 type="button"
