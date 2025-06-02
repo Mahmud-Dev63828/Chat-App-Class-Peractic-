@@ -18,7 +18,6 @@ import {
 const BlockUser = () => {
   const db = getDatabase();
   const auth = getAuth();
-  const [arrayLength, setArrayLength] = useState(10);
   const [loading, setLoading] = useState(true);
   const [blockList, setBlockList] = useState([]);
 
@@ -73,7 +72,7 @@ const BlockUser = () => {
           {blockList.map((blockUser, index) => (
             <div
               className={
-                arrayLength - 1 == index
+                blockList.length - 1 == index
                   ? "flex items-center justify-between mt-2 "
                   : "flex items-center justify-between mt-2 border-b border-b-gray-500 pb-2"
               }
