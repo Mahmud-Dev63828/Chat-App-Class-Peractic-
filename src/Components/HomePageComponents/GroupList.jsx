@@ -1,57 +1,58 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Avatar from "../../assets/homeAssets/avatar.gif";
 import Modal from "react-modal";
-const customStyles = {
-  content: {
-    top: "50%",
-    left: "50%",
-    right: "auto",
-    bottom: "auto",
-    marginRight: "-50%",
-    transform: "translate(-50%, -50%)",
-  },
-};
-
+import lib from "../../Lib/lib";
+import { closeModal, openModal } from "../../../utils/modal.upload";
+import { validationField } from "../../../validation/groupForm.validation";
+import { handleChange } from "../../../utils/onchangeHandaler.utils";
+import { setFirebaseData, uploadFile } from "../../../utils/upload";
+import { getAuth } from "firebase/auth";
 const GroupList = () => {
+  const auth = getAuth();
+  const inputImageRef = useRef(null);
   const [arrayLength, setArrayLength] = useState(10);
   const [modalIsOpen, setIsOpen] = useState(false);
   const [groupError, setGroupError] = useState({});
-
+  const [loading, setloading] = useState(false);
   const [groupInfo, setGroupInfo] = useState({
     groupName: "",
     groupTagName: "",
     groupImage: "",
   });
 
-  function openModal() {
-    setIsOpen(true);
-  }
-  function closeModal() {
-    setIsOpen(false);
-  }
-  // validationField function
-  const validationField = () => {
-    let error = {};
-    for (let field in groupInfo) {
-      if (groupInfo[field] == "") {
-        error[`${field}Error`] = `${field} missing. fill up the ${field}`;
+  // handle submit
+  const handleSubmit = async () => {
+    const isValid = validationField(groupInfo, setGroupError);
+    if (!isValid) return;
+    const formData = new FormData();
+    formData.append("file", groupInfo.groupImage);
+    formData.append("upload_preset", "chatAppClass");
+    try {
+      setloading(true);
+      const Url = await uploadFile(formData);
+      await setFirebaseData("groupList/", {
+        adminName: auth.currentUser.displayName,
+        adminUid: auth.currentUser.uid,
+        adminEmail: auth.currentUser.email,
+        adminPhoto_url: auth.currentUser.photoURL,
+        groupName: groupInfo.groupName,
+        groupTagName: groupInfo.groupTagName,
+        groupImage: Url,
+      });
+    } catch (error) {
+      console.error("Image upload failed:", error);
+    } finally {
+      setloading(false);
+      setGroupInfo({
+        groupImage: "",
+        groupTagName: "",
+        groupName: "",
+      });
+      closeModal(setIsOpen);
+      if (inputImageRef.current) {
+        inputImageRef.current.value = null;
       }
     }
-    setGroupError(error);
-  };
-  // handla change
-  const handleChange = (event) => {
-    const { files, id, value } = event.target;
-    validationField();
-    setGroupInfo({
-      ...groupInfo,
-      [id]: id == "groupImage" ? files[0] : value,
-    });
-  };
-
-  // handle submit
-  const handleSubmit = () => {
-    validationField();
   };
   console.log(groupError);
 
@@ -96,7 +97,7 @@ const GroupList = () => {
           </h1>
 
           <button
-            onClick={openModal}
+            onClick={() => openModal(setIsOpen)}
             className="bg-blue-800 cursor-pointer px-6 rounded py-1 text-white"
           >
             Create Group
@@ -136,8 +137,8 @@ const GroupList = () => {
       <div>
         <Modal
           isOpen={modalIsOpen}
-          onRequestClose={closeModal}
-          style={customStyles}
+          onRequestClose={() => closeModal(setIsOpen)}
+          style={lib.customStyle}
         >
           <button
             onClick={() => closeModal(setIsOpen)}
@@ -158,10 +159,12 @@ const GroupList = () => {
                 <input
                   type="text"
                   id="groupName"
-                  // value={groupinfo.groupName}
+                  value={groupInfo.groupName}
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   placeholder="hello"
-                  onChange={handleChange}
+                  onChange={(event) =>
+                    handleChange(event, setGroupInfo, setGroupError)
+                  }
                   required
                 />
                 {groupError.groupNameError && (
@@ -179,11 +182,10 @@ const GroupList = () => {
                 </label>
                 <input
                   type="text"
-                  // onChange={(event) =>
-                  //   handleChange(event, setgroupinfo, setGroupError)
-                  // }
-                  // value={groupinfo.groupTagName}
-                  onChange={handleChange}
+                  onChange={(event) =>
+                    handleChange(event, setGroupInfo, setGroupError)
+                  }
+                  value={groupInfo.groupTagName}
                   id="groupTagName"
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   required
@@ -203,11 +205,10 @@ const GroupList = () => {
                   Upload file
                 </label>
                 <input
-                  // onChange={(event) =>
-                  //   handleChange(event, setgroupinfo, setGroupError)
-                  // }
-                  // ref={inputImageRef}
-                  onChange={handleChange}
+                  onChange={(event) =>
+                    handleChange(event, setGroupInfo, setGroupError)
+                  }
+                  ref={inputImageRef}
                   class="block w-full text-sm py-3 px-2 text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
                   id="groupImage"
                   type="file"
@@ -218,14 +219,8 @@ const GroupList = () => {
                   </span>
                 )}
               </div>
-              <button
-                onClick={handleSubmit}
-                type="submit"
-                class="mt-10 cursor-pointer text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-              >
-                Create
-              </button>
-              {/* {loading ? (
+
+              {loading ? (
                 <button
                   type="submit"
                   class="mt-10 animate-pulse text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
@@ -234,12 +229,13 @@ const GroupList = () => {
                 </button>
               ) : (
                 <button
+                  onClick={handleSubmit}
                   type="submit"
-                  class="mt-10 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                  class="mt-10 cursor-pointer text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                 >
                   Create
                 </button>
-              )} */}
+              )}
             </form>
           </div>
         </Modal>
