@@ -10,7 +10,7 @@ const Group = () => {
       <div className=" shadow-2xs ">
         <div className="flex items-center justify-between">
           <h1 className="relative">
-            Group
+            My Group
             <span className="absolute -right-6  top-0 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
               {arrayLength}
             </span>
