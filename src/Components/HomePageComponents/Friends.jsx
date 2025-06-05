@@ -13,8 +13,11 @@ import {
   push,
   remove,
 } from "firebase/database";
+import { friendAction } from "../../Features/slices/friendSlice";
+import { useDispatch } from "react-redux";
 
-const Friends = () => {
+const Friends = ({ buttonVisuable = true }) => {
+  const dispatch = useDispatch();
   const db = getDatabase();
   const auth = getAuth();
   const [frndList, setFrndList] = useState([]);
@@ -77,6 +80,28 @@ const Friends = () => {
       remove(frndRef);
     });
   };
+  // todo : sendMsg function
+  const sendMsg = (frndInfo) => {
+    if (auth.currentUser.uid == frndInfo.whoRecivedFrndReqUid) {
+      let userInfo = {
+        UserKey: frndInfo.whoSendFrndReqUserKey,
+        Useremail: frndInfo.whoSendFrndReqEmail,
+        Userprofile_picture: frndInfo.whoSendFrndReqProfile_Picture,
+        UserUid: frndInfo.whoSendFrndReqUid,
+        Username: frndInfo.whoSendFrndReqName,
+      };
+      dispatch(friendAction(userInfo));
+    } else {
+      let userInfo = {
+        Username: frndInfo.whoRecivedFrndReqName,
+        UserProfile_picture: frndInfo.whoRecivedFrndReqProfile_Picture,
+        UserUid: frndInfo.whoRecivedFrndReqUid,
+        UserKey: frndInfo.whoRecivedFrndReqUserKey,
+        Useremail: frndInfo.whoRecivedFrndReqEmail,
+      };
+      dispatch(friendAction(userInfo));
+    }
+  };
 
   return (
     <div>
@@ -96,6 +121,7 @@ const Friends = () => {
         <div className="overflow-y-scroll h-[40dvh]">
           {frndList.map((frnd, index) => (
             <div
+              onClick={() => sendMsg(frnd)}
               className={
                 frnd - 1 == index
                   ? "flex items-center justify-between mt-2 "
@@ -117,32 +143,35 @@ const Friends = () => {
                 </h1>
                 <p className="text-sm ">Hi Friends, What's up</p>
               </div>
-              <div className="flex">
-                <button
-                  type="button"
-                  class="focus:outline-none cursor-pointer text-white bg-green-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-2 py-1 me-2 mb-2"
-                >
-                  unfriend
-                </button>
-                {blockUser?.includes(
-                  auth?.currentUser?.uid.concat(frnd.whoSendFrndReqUid)
-                ) ? (
+              {/* button */}
+              {buttonVisuable && (
+                <div className="flex">
                   <button
                     type="button"
-                    class="focus:outline-none cursor-pointer text-white bg-purple-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-2 py-1 me-2 mb-2"
+                    class="focus:outline-none cursor-pointer text-white bg-green-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-2 py-1 me-2 mb-2"
                   >
-                    blocked
+                    unfriend
                   </button>
-                ) : (
-                  <button
-                    onClick={() => handleBlock(frnd)}
-                    type="button"
-                    class="focus:outline-none cursor-pointer text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-2 py-1 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900"
-                  >
-                    Block
-                  </button>
-                )}
-              </div>
+                  {blockUser?.includes(
+                    auth?.currentUser?.uid.concat(frnd.whoSendFrndReqUid)
+                  ) ? (
+                    <button
+                      type="button"
+                      class="focus:outline-none cursor-pointer text-white bg-purple-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-2 py-1 me-2 mb-2"
+                    >
+                      blocked
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleBlock(frnd)}
+                      type="button"
+                      class="focus:outline-none cursor-pointer text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-2 py-1 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900"
+                    >
+                      Block
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>
