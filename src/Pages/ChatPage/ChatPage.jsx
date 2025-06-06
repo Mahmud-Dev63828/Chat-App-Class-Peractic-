@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import GroupList from "../../Components/HomePageComponents/GroupList";
 import Friends from "../../Components/HomePageComponents/Friends";
 import { IoCloudUploadOutline } from "react-icons/io5";
@@ -16,7 +16,7 @@ const ChatPage = () => {
   const [msg, setmsg] = useState("");
   const [loading, setLoading] = useState(false);
   const [emojiOpen, setemojiOpen] = useState(false);
-  console.log(msg);
+  const [allsingleMsg, setAllsingleMsg] = useState([]);
 
   // handleEmoji
   const handleEmoji = ({ emoji }) => {
@@ -47,6 +47,31 @@ const ChatPage = () => {
       // setSendImage([]);
     }
   };
+  //  singleMsg fetch
+  useEffect(() => {
+    const fetchSingleMsg = async () => {
+      try {
+        const singleMsgRef = ref(db, "singleMsg");
+        onValue(singleMsgRef, (snapshot) => {
+          let msgBlankArr = [];
+          snapshot.forEach((msg) => {
+            if (
+              auth.currentUser.uid == msg.val().whoSendmsgUid ||
+              auth.currentUser.uid == msg.val().whoRvMsgUid
+            ) {
+              msgBlankArr.push({ ...msg.val(), msgKey: msg.key });
+            }
+          });
+          setAllsingleMsg(msgBlankArr);
+        });
+      } catch (error) {
+        console.error("error from fetch data", error);
+      }
+    };
+    fetchSingleMsg();
+  }, []);
+  console.log(allsingleMsg);
+
   return (
     <div className="w-full  h-[90dvh]">
       <div className="flex h-full">

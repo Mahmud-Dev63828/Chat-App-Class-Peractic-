@@ -38,7 +38,6 @@ const Friends = ({ buttonVisuable = true }) => {
           blockBlankArr.push(
             auth?.currentUser.uid.concat(block?.val().whoSendFrndReqUid)
           );
-        console.log(block.val());
       });
       setBlockUser(blockBlankArr);
     });
